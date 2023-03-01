@@ -1,13 +1,14 @@
 import 'dart:math';
 import 'package:flutter/services.dart';
+import 'package:flutter_2048/global/prefs.dart';
+import 'package:flutter_2048/global/urls.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_swipe_detector/flutter_swipe_detector.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:uuid/uuid.dart';
-
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 import '../models/tile.dart';
 import '../models/board.dart';
-
 import 'next_direction.dart';
 import 'round.dart';
 
@@ -168,6 +169,11 @@ class BoardManager extends StateNotifier<Board> {
           merged = true;
           score += tile.value;
           i += 1;
+          IO.io(serverUrl).emit("addScore", {
+            "name": prefs.getString("name"),
+            "password": prefs.getString("password"),
+            "score": score
+          });
         }
       }
 

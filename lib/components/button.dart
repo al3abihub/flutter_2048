@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_2048/ads/adOpenApp.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../const/colors.dart';
+import '../global/colors.dart';
 
 class ButtonWidget extends ConsumerWidget {
   const ButtonWidget(
@@ -20,7 +21,10 @@ class ButtonWidget extends ConsumerWidget {
             color: scoreColor, borderRadius: BorderRadius.circular(8.0)),
         child: IconButton(
             color: textColorWhite,
-            onPressed: onPressed,
+            onPressed: () {
+              AdOpenApp.load();
+              onPressed();
+            },
             icon: Icon(
               icon,
               size: 24.0,

@@ -1,10 +1,9 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../const/colors.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../global/colors.dart';
 import '../managers/board.dart';
-
 import 'animated_tile.dart';
 import 'button.dart';
 
@@ -57,7 +56,7 @@ class TileBoardWidget extends ConsumerWidget {
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 24.0,
-                      color: tile.value < 8 ? textColor : textColorWhite),
+                      color: textColorWhite),
                 )),
               ),
             );
@@ -70,14 +69,18 @@ class TileBoardWidget extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    board.won ? 'You win!' : 'Game over!',
+                    board.won
+                        ? AppLocalizations.of(context)!.you_win
+                        : AppLocalizations.of(context)!.game_over,
                     style: const TextStyle(
                         color: textColor,
                         fontWeight: FontWeight.bold,
                         fontSize: 64.0),
                   ),
                   ButtonWidget(
-                    text: board.won ? 'New Game' : 'Try again',
+                    text: board.won
+                        ? AppLocalizations.of(context)!.new_game
+                        : AppLocalizations.of(context)!.try_again,
                     onPressed: () {
                       ref.read(boardManager.notifier).newGame();
                     },

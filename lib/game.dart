@@ -1,13 +1,26 @@
+// ignore_for_file: empty_catches
+
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_2048/global/prefs.dart';
+import 'package:flutter_2048/global/top10Users.dart';
+import 'package:flutter_2048/login/login.dart';
+import 'package:flutter_2048/scores/scores.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_swipe_detector/flutter_swipe_detector.dart';
-
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'ads/adOpenApp.dart';
 import 'components/button.dart';
 import 'components/empy_board.dart';
 import 'components/score_board.dart';
 import 'components/tile_board.dart';
-import 'const/colors.dart';
+import 'global/colors.dart';
+import 'global/urls.dart';
 import 'managers/board.dart';
+import 'package:http/http.dart' as http;
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class Game extends ConsumerStatefulWidget {
   const Game({super.key});
@@ -54,12 +67,37 @@ class _GameState extends ConsumerState<Game>
     parent: _scaleController,
     curve: Curves.easeInOut,
   );
-
+  late Timer timer;
   @override
   void initState() {
-    //Add an Observer for the Lifecycles of the App
+    AdOpenApp.load();
+    getTo10Users();
+    timer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      try {
+        getTo10Users();
+      } catch (e) {}
+    });
     WidgetsBinding.instance.addObserver(this);
     super.initState();
+  }
+
+  void getTo10Users() {
+    http
+        .get(Uri.parse(
+            "${top10UsersUrl}?name=${prefs.getString("name")}&password=${prefs.getString("password")}"))
+        .then((value) {
+      try {
+        final body = json.decode(value.body);
+        top10Users.clear();
+        List tops = body["top10Users"];
+        top10Users = tops;
+        if (body["ok"] == 0) {
+          return Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => Login()));
+        }
+        setState(() {});
+      } catch (e) {}
+    });
   }
 
   @override
@@ -73,77 +111,160 @@ class _GameState extends ConsumerState<Game>
           _moveController.forward(from: 0.0);
         }
       },
-      child: SwipeDetector(
-        onSwipe: (direction, offset) {
-          if (ref.read(boardManager.notifier).move(direction)) {
-            _moveController.forward(from: 0.0);
-          }
-        },
-        child: Scaffold(
-          backgroundColor: backgroundColor,
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Scaffold(
+        backgroundColor: backgroundColor,
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: ElevatedButton(
+                onPressed: () {
+                  AdOpenApp.load();
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => Scores(),
+                  ));
+                },
+                style: ButtonStyle(
+                  padding: MaterialStateProperty.all(
+                      EdgeInsets.only(top: 7, bottom: 7, right: 7, left: 15)),
+                  backgroundColor: MaterialStateProperty.all<Color>(scoreColor),
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      '2048',
-                      style: TextStyle(
-                          color: textColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 52.0),
-                    ),
                     Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        const ScoreBoard(),
-                        const SizedBox(
-                          height: 32.0,
-                        ),
-                        Row(
-                          children: [
-                            ButtonWidget(
-                              icon: Icons.undo,
-                              onPressed: () {
-                                //Undo the round.
-                                ref.read(boardManager.notifier).undo();
-                              },
-                            ),
-                            const SizedBox(
-                              width: 16.0,
-                            ),
-                            ButtonWidget(
-                              icon: Icons.refresh,
-                              onPressed: () {
-                                //Restart the game
-                                ref.read(boardManager.notifier).newGame();
-                              },
-                            )
-                          ],
-                        )
-                      ],
-                    )
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            AppLocalizations.of(context)!
+                                .the_highest_score_in_the_game,
+                            style:
+                                const TextStyle(fontSize: 18.0, color: color2),
+                          ),
+                          top10Users != null
+                              ? Text(
+                                  "${top10Users[0]["name"] ?? "00000"} : ${top10Users[0]["score"] ?? "00000"}",
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18.0),
+                                )
+                              : const Text(
+                                  "00000 : 000000",
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18.0),
+                                )
+                        ]),
+                    Icon(
+                      Icons.open_in_new_sharp,
+                      size: 30,
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(
-                height: 32.0,
-              ),
-              Stack(
-                children: [
-                  const EmptyBoardWidget(),
-                  TileBoardWidget(
-                      moveAnimation: _moveAnimation,
-                      scaleAnimation: _scaleAnimation)
-                ],
-              )
-            ],
-          ),
+            ),
+            SizedBox(
+              height: 20,
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        '2048',
+                        style: TextStyle(
+                            color: textColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 52.0),
+                      ),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          const ScoreBoard(),
+                          Container(
+                            margin: EdgeInsets.all(20),
+                            width: 130,
+                            height: 50,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                ref.read(boardManager.notifier).newGame();
+                                IO.io(serverUrl).emit("logout", {
+                                  "name": prefs.getString("name"),
+                                  "password": prefs.getString("password"),
+                                });
+                                prefs.clear();
+                                Navigator.of(context)
+                                    .pushReplacement(MaterialPageRoute(
+                                  builder: (context) => Login(),
+                                ));
+                              },
+                              child: Text(
+                                AppLocalizations.of(context)!.logout,
+                                style: TextStyle(color: backgroundColor),
+                              ),
+                              style: ButtonStyle(
+                                  backgroundColor:
+                                      MaterialStateProperty.all(scoreColor)),
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              ButtonWidget(
+                                icon: Icons.undo,
+                                onPressed: () {
+                                  //Undo the round.
+                                  ref.read(boardManager.notifier).undo();
+                                },
+                              ),
+                              const SizedBox(
+                                width: 16.0,
+                              ),
+                              ButtonWidget(
+                                icon: Icons.refresh,
+                                onPressed: () {
+                                  //Restart the game
+                                  ref.read(boardManager.notifier).newGame();
+                                },
+                              )
+                            ],
+                          ),
+                        ],
+                      )
+                    ],
+                  ),
+                ),
+                const SizedBox(
+                  height: 32.0,
+                ),
+                SwipeDetector(
+                  onSwipe: (direction, offset) {
+                    if (ref.read(boardManager.notifier).move(direction)) {
+                      _moveController.forward(from: 0.0);
+                    }
+                  },
+                  child: Stack(
+                    children: [
+                      const EmptyBoardWidget(),
+                      TileBoardWidget(
+                          moveAnimation: _moveAnimation,
+                          scaleAnimation: _scaleAnimation)
+                    ],
+                  ),
+                )
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -168,6 +289,7 @@ class _GameState extends ConsumerState<Game>
     _scaleAnimation.dispose();
     _moveController.dispose();
     _scaleController.dispose();
+    timer.cancel();
     super.dispose();
   }
 }

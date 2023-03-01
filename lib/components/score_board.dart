@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../const/colors.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../global/colors.dart';
 import '../managers/board.dart';
 
 class ScoreBoard extends ConsumerWidget {
@@ -15,12 +15,12 @@ class ScoreBoard extends ConsumerWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Score(label: 'Score', score: '$score'),
+        Score(label: AppLocalizations.of(context)!.score, score: '$score'),
         const SizedBox(
           width: 8.0,
         ),
         Score(
-            label: 'Best',
+            label: AppLocalizations.of(context)!.best,
             score: '$best',
             padding:
                 const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0)),

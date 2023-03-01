@@ -1,0 +1,31 @@
+{
+    "score": "النقاط",
+    "best": "الافضل",
+    "game_over": "انتهت اللعبة",
+    "you_win": "لقد فزت",
+    "new_game": "اعادة اللعب",
+    "try_again": "حاول مجددا",
+    "the_highest_score_in_the_game": "الحاصل على اعلا نقاط في اللعبة",
+    "enter_a_name_for_the_palyer": "اكتب اسم اللاعب",
+    "name": "الاسم",
+    "select_country": "اختر الدولة",
+    "enter_your_country_name": "اكتب اسم بلدك",
+    "search": "بحث",
+    "enter_your_email": "اكتب ايميلك",
+    "email": "الايميل",
+    "player":"اللاعب",
+    "start":"البدأ",
+    "password": "الرمز السري",
+    "enter_your_password": "اكتب الرمز السري",
+    "login": "دخول",
+    "new_account": "حساب جديد",
+    "register": "تسجيل",
+    "error": "خطأ",
+    "name_used_by_another_user":"الاسم مستخدم من قبل لاعب اخر",
+    "check_data_entered": "تأكد من البيانات المدخلة",
+    "logout": "خروج",
+    "top10scores": "العشرة الأوائل"
+
+
+
+}
